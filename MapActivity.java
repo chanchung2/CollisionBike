@@ -5,21 +5,25 @@ import android.annotation.TargetApi;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -36,6 +40,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.io.IOException;
 import java.util.List;
@@ -46,18 +52,22 @@ public class MapActivity extends AppCompatActivity
         implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener{
+        LocationListener {
 
 
     private GoogleApiClient mGoogleApiClient = null;
     private GoogleMap mGoogleMap = null;
     private Marker currentMarker = null;
 
+    double speed;
+    double distance;
+
     private static final String TAG = "googlemap_example";
     private static final int GPS_ENABLE_REQUEST_CODE = 2001;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2002;
     private static final int UPDATE_INTERVAL_MS = 1000;  // 1초
     private static final int FASTEST_UPDATE_INTERVAL_MS = 500; // 0.5초
+
 
     private AppCompatActivity mActivity;
     boolean askPermissionOnceAgain = false;
@@ -66,11 +76,14 @@ public class MapActivity extends AppCompatActivity
     boolean mMoveMapByUser = true;
     boolean mMoveMapByAPI = true;
 
+    boolean Runstate = false;
+
+    PolylineOptions rectOptions = new PolylineOptions();
+
     LocationRequest locationRequest = new LocationRequest()
             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
             .setInterval(UPDATE_INTERVAL_MS)
             .setFastestInterval(FASTEST_UPDATE_INTERVAL_MS);
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +104,29 @@ public class MapActivity extends AppCompatActivity
         MapFragment mapFragment = (MapFragment) getFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        final Button R_button = (Button) findViewById(R.id.RunButton);
+        R_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                if (Runstate == false) {
+                    R_button.setText("종료");
+                    Runstate = true;
+
+                    speed = 0.0;
+
+                    SpeedDistance(speed);
+                } else {
+                    R_button.setText("시작");
+                    Runstate = false;
+
+                    rectOptions = new PolylineOptions();
+                    mGoogleMap.clear();
+
+                }
+            }
+        });
     }
 
     @Override
@@ -114,13 +150,12 @@ public class MapActivity extends AppCompatActivity
         }
     }
 
-
     private void startLocationUpdates() {
         if (!checkLocationServicesStatus()) {
 
             Log.d(TAG, "startLocationUpdates : call showDialogForLocationServiceSetting");
             showDialogForLocationServiceSetting();
-        }else {
+        } else {
 
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                     && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -136,16 +171,12 @@ public class MapActivity extends AppCompatActivity
 
     }
 
-
-
     private void stopLocationUpdates() {
 
-        Log.d(TAG,"stopLocationUpdates : LocationServices.FusedLocationApi.removeLocationUpdates");
+        Log.d(TAG, "stopLocationUpdates : LocationServices.FusedLocationApi.removeLocationUpdates");
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         mRequestingLocationUpdates = false;
     }
-
-
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -162,12 +193,12 @@ public class MapActivity extends AppCompatActivity
         //mGoogleMap.getUiSettings().setZoomControlsEnabled(false);
         mGoogleMap.getUiSettings().setMyLocationButtonEnabled(true);
         mGoogleMap.animateCamera(CameraUpdateFactory.zoomTo(15));
-        mGoogleMap.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener(){
+        mGoogleMap.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener() {
 
             @Override
             public boolean onMyLocationButtonClick() {
 
-                Log.d( TAG, "onMyLocationButtonClick : 위치에 따른 카메라 이동 활성화");
+                Log.d(TAG, "onMyLocationButtonClick : 위치에 따른 카메라 이동 활성화");
                 mMoveMapByAPI = true;
                 return true;
             }
@@ -177,7 +208,7 @@ public class MapActivity extends AppCompatActivity
             @Override
             public void onMapClick(LatLng latLng) {
 
-                Log.d( TAG, "onMapClick :");
+                Log.d(TAG, "onMapClick :");
             }
         });
 
@@ -186,7 +217,7 @@ public class MapActivity extends AppCompatActivity
             @Override
             public void onCameraMoveStarted(int i) {
 
-                if (mMoveMapByUser == true && mRequestingLocationUpdates){
+                if (mMoveMapByUser == true && mRequestingLocationUpdates) {
 
                     Log.d(TAG, "onCameraMove : 위치에 따른 카메라 이동 비활성화");
                     mMoveMapByAPI = false;
@@ -208,10 +239,8 @@ public class MapActivity extends AppCompatActivity
         });
     }
 
-
     @Override
     public void onLocationChanged(Location location) {
-
 
         Log.d(TAG, "onLocationChanged : ");
 
@@ -219,17 +248,28 @@ public class MapActivity extends AppCompatActivity
         String markerSnippet = "위도:" + String.valueOf(location.getLatitude())
                 + " 경도:" + String.valueOf(location.getLongitude());
 
-        //현재 위치에 마커 생성하고 이동
         setCurrentLocation(location, markerTitle, markerSnippet);
 
         mCurrentLocatiion = location;
-    }
 
+        if (Runstate == true) {
+            rectOptions.add(new LatLng(location.getLatitude(), location.getLongitude()));
+
+            rectOptions.width(10);
+            rectOptions.color(Color.RED);
+
+            Polyline polyline = mGoogleMap.addPolyline(rectOptions);
+
+            speed = location.getSpeed();
+
+            SpeedDistance(speed);
+        }
+    }
 
     @Override
     protected void onStart() {
 
-        if(mGoogleApiClient != null && mGoogleApiClient.isConnected() == false){
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected() == false) {
 
             Log.d(TAG, "onStart: mGoogleApiClient connect");
             mGoogleApiClient.connect();
@@ -247,7 +287,7 @@ public class MapActivity extends AppCompatActivity
             stopLocationUpdates();
         }
 
-        if ( mGoogleApiClient.isConnected()) {
+        if (mGoogleApiClient.isConnected()) {
 
             Log.d(TAG, "onStop : mGoogleApiClient disconnect");
             mGoogleApiClient.disconnect();
@@ -256,12 +296,11 @@ public class MapActivity extends AppCompatActivity
         super.onStop();
     }
 
-
     @Override
     public void onConnected(Bundle connectionHint) {
 
 
-        if ( mRequestingLocationUpdates == false ) {
+        if (mRequestingLocationUpdates == false) {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
@@ -282,7 +321,7 @@ public class MapActivity extends AppCompatActivity
                     mGoogleMap.setMyLocationEnabled(true);
                 }
 
-            }else{
+            } else {
 
                 Log.d(TAG, "onConnected : call startLocationUpdates");
                 startLocationUpdates();
@@ -291,14 +330,12 @@ public class MapActivity extends AppCompatActivity
         }
     }
 
-
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
 
         Log.d(TAG, "onConnectionFailed");
         setDefaultLocation();
     }
-
 
     @Override
     public void onConnectionSuspended(int cause) {
@@ -312,10 +349,8 @@ public class MapActivity extends AppCompatActivity
                     "connection lost.  Cause: service disconnected");
     }
 
-
     public String getCurrentAddress(Location location) {
 
-        //지오코더... GPS를 주소로 변환
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
 
         List<Address> addresses;
@@ -348,14 +383,12 @@ public class MapActivity extends AppCompatActivity
 
     }
 
-
     public boolean checkLocationServicesStatus() {
         LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
                 || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
     }
-
 
     public void setCurrentLocation(Location location, String markerTitle, String markerSnippet) {
 
@@ -379,16 +412,15 @@ public class MapActivity extends AppCompatActivity
         currentMarker = mGoogleMap.addMarker(markerOptions);
 
 
-        if ( mMoveMapByAPI ) {
+        if (mMoveMapByAPI) {
 
-            Log.d( TAG, "setCurrentLocation :  mGoogleMap moveCamera "
-                    + location.getLatitude() + " " + location.getLongitude() ) ;
+            Log.d(TAG, "setCurrentLocation :  mGoogleMap moveCamera "
+                    + location.getLatitude() + " " + location.getLongitude());
             // CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(currentLatLng, 15);
             CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLng(currentLatLng);
             mGoogleMap.moveCamera(cameraUpdate);
         }
     }
-
 
     public void setDefaultLocation() {
 
@@ -416,8 +448,6 @@ public class MapActivity extends AppCompatActivity
 
     }
 
-
-    //여기부터는 런타임 퍼미션 처리을 위한 메소드들
     @TargetApi(Build.VERSION_CODES.M)
     private void checkPermissions() {
         boolean fineLocationRationale = ActivityCompat
@@ -440,7 +470,7 @@ public class MapActivity extends AppCompatActivity
             Log.d(TAG, "checkPermissions : 퍼미션 가지고 있음");
 
 
-            if ( mGoogleApiClient.isConnected() == false) {
+            if (mGoogleApiClient.isConnected() == false) {
 
                 Log.d(TAG, "checkPermissions : 퍼미션 가지고 있음");
                 mGoogleApiClient.connect();
@@ -461,12 +491,11 @@ public class MapActivity extends AppCompatActivity
             if (permissionAccepted) {
 
 
-                if ( mGoogleApiClient.isConnected() == false) {
+                if (mGoogleApiClient.isConnected() == false) {
 
                     Log.d(TAG, "onRequestPermissionsResult : mGoogleApiClient connect");
                     mGoogleApiClient.connect();
                 }
-
 
 
             } else {
@@ -475,7 +504,6 @@ public class MapActivity extends AppCompatActivity
             }
         }
     }
-
 
     @TargetApi(Build.VERSION_CODES.M)
     private void showDialogForPermission(String msg) {
@@ -526,8 +554,6 @@ public class MapActivity extends AppCompatActivity
         builder.create().show();
     }
 
-
-    //여기부터는 GPS 활성화를 위한 메소드들
     private void showDialogForLocationServiceSetting() {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(MapActivity.this);
@@ -552,7 +578,6 @@ public class MapActivity extends AppCompatActivity
         builder.create().show();
     }
 
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -568,9 +593,9 @@ public class MapActivity extends AppCompatActivity
                         Log.d(TAG, "onActivityResult : 퍼미션 가지고 있음");
 
 
-                        if ( mGoogleApiClient.isConnected() == false ) {
+                        if (mGoogleApiClient.isConnected() == false) {
 
-                            Log.d( TAG, "onActivityResult : mGoogleApiClient connect ");
+                            Log.d(TAG, "onActivityResult : mGoogleApiClient connect ");
                             mGoogleApiClient.connect();
                         }
                         return;
@@ -581,5 +606,16 @@ public class MapActivity extends AppCompatActivity
         }
     }
 
+    private void SpeedDistance(double speed)
+    {
+        TextView speedview = (TextView) findViewById(R.id.SpeedText);
+        TextView distanceview = (TextView) findViewById(R.id.DistanceText);
+
+        speed = (double) (speed * 3.6);
+        speedview.setText("속도 : " + speed + "km/h");
+
+        distance = (speed * 1000) / 3600;
+        distanceview.setText("이동한 거리 : " + distance + "m");
+    }
 
 }

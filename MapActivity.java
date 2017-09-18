@@ -59,15 +59,14 @@ public class MapActivity extends AppCompatActivity
     private GoogleMap mGoogleMap = null;
     private Marker currentMarker = null;
 
-    double speed;
-    double distance;
+    double speed=0;
+    double distance=0;
 
     private static final String TAG = "googlemap_example";
     private static final int GPS_ENABLE_REQUEST_CODE = 2001;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2002;
     private static final int UPDATE_INTERVAL_MS = 1000;  // 1초
     private static final int FASTEST_UPDATE_INTERVAL_MS = 500; // 0.5초
-
 
     private AppCompatActivity mActivity;
     boolean askPermissionOnceAgain = false;
@@ -85,8 +84,12 @@ public class MapActivity extends AppCompatActivity
             .setInterval(UPDATE_INTERVAL_MS)
             .setFastestInterval(FASTEST_UPDATE_INTERVAL_MS);
 
+    public MapActivity() {
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
@@ -115,15 +118,16 @@ public class MapActivity extends AppCompatActivity
                     Runstate = true;
 
                     speed = 0.0;
+                    distance = 0.0;
 
                     SpeedDistance(speed);
+
                 } else {
                     R_button.setText("시작");
                     Runstate = false;
 
                     rectOptions = new PolylineOptions();
                     mGoogleMap.clear();
-
                 }
             }
         });
@@ -240,7 +244,7 @@ public class MapActivity extends AppCompatActivity
     }
 
     @Override
-    public void onLocationChanged(Location location) {
+    public void onLocationChanged(final Location location) {
 
         Log.d(TAG, "onLocationChanged : ");
 
@@ -260,9 +264,10 @@ public class MapActivity extends AppCompatActivity
 
             Polyline polyline = mGoogleMap.addPolyline(rectOptions);
 
-            speed = location.getSpeed();
+            speed = mCurrentLocatiion.getSpeed();
 
             SpeedDistance(speed);
+
         }
     }
 
@@ -612,9 +617,14 @@ public class MapActivity extends AppCompatActivity
         TextView distanceview = (TextView) findViewById(R.id.DistanceText);
 
         speed = (double) (speed * 3.6);
+        String S_speed = String.format("%.1f", speed);
+        speed = Double.parseDouble(S_speed);
         speedview.setText("속도 : " + speed + "km/h");
 
-        distance = (speed * 1000) / 3600;
+        distance = distance + (speed * 1000) / 3600;
+        String S_distance = String.format("%.1f", distance);
+        distance = Double.parseDouble(S_distance);
+
         distanceview.setText("이동한 거리 : " + distance + "m");
     }
 

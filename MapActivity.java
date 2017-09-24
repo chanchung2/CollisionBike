@@ -21,7 +21,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -91,9 +90,6 @@ public class MapActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
-                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_map);
 
         Log.d(TAG, "onCreate");
@@ -120,18 +116,18 @@ public class MapActivity extends AppCompatActivity
                     speed = 0.0;
                     distance = 0.0;
 
-                    SpeedDistance(speed);
+            SpeedDistance(speed);
 
-                } else {
-                    R_button.setText("시작");
-                    Runstate = false;
+} else {
+        R_button.setText("시작");
+        Runstate = false;
 
-                    rectOptions = new PolylineOptions();
-                    mGoogleMap.clear();
-                }
-            }
+        rectOptions = new PolylineOptions();
+        mGoogleMap.clear();
+        }
+        }
         });
-    }
+        }
 
     @Override
     public void onResume() {
@@ -259,7 +255,7 @@ public class MapActivity extends AppCompatActivity
         if (Runstate == true) {
             rectOptions.add(new LatLng(location.getLatitude(), location.getLongitude()));
 
-            rectOptions.width(10);
+            rectOptions.width(20);
             rectOptions.color(Color.RED);
 
             Polyline polyline = mGoogleMap.addPolyline(rectOptions);

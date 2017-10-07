@@ -116,18 +116,18 @@ public class MapActivity extends AppCompatActivity
                     speed = 0.0;
                     distance = 0.0;
 
-            SpeedDistance(speed);
+                     SpeedDistance(speed);
 
-} else {
-        R_button.setText("시작");
-        Runstate = false;
+                } else {
+                    R_button.setText("시작");
+                    Runstate = false;
 
-        rectOptions = new PolylineOptions();
-        mGoogleMap.clear();
-        }
-        }
+                     rectOptions = new PolylineOptions();
+                    mGoogleMap.clear();
+                 }
+            }
         });
-        }
+    }
 
     @Override
     public void onResume() {
@@ -139,7 +139,6 @@ public class MapActivity extends AppCompatActivity
             if (!mRequestingLocationUpdates) startLocationUpdates();
         }
 
-        //앱 정보에서 퍼미션을 허가했는지를 다시 검사해봐야 한다.
         if (askPermissionOnceAgain) {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -185,9 +184,6 @@ public class MapActivity extends AppCompatActivity
 
         mGoogleMap = googleMap;
 
-
-        //런타임 퍼미션 요청 대화상자나 GPS 활성 요청 대화상자 보이기전에
-        //지도의 초기위치를 서울로 이동
         setDefaultLocation();
 
         //mGoogleMap.getUiSettings().setZoomControlsEnabled(false);
@@ -363,7 +359,7 @@ public class MapActivity extends AppCompatActivity
                     location.getLongitude(),
                     1);
         } catch (IOException ioException) {
-            //네트워크 문제
+
             Toast.makeText(this, "지오코더 서비스 사용불가", Toast.LENGTH_LONG).show();
             return "지오코더 서비스 사용불가";
         } catch (IllegalArgumentException illegalArgumentException) {
@@ -401,8 +397,6 @@ public class MapActivity extends AppCompatActivity
 
         LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
 
-        //구글맵의 디폴트 현재 위치는 파란색 동그라미로 표시
-        //마커를 원하는 이미지로 변경하여 현재 위치 표시하도록 수정해야함.
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(currentLatLng);
         markerOptions.title(markerTitle);
@@ -428,7 +422,6 @@ public class MapActivity extends AppCompatActivity
         mMoveMapByUser = false;
 
 
-        //디폴트 위치, Seoul
         LatLng DEFAULT_LOCATION = new LatLng(37.56, 126.97);
         String markerTitle = "위치정보 가져올 수 없음";
         String markerSnippet = "위치 퍼미션과 GPS 활성 요부 확인하세요";
@@ -587,7 +580,6 @@ public class MapActivity extends AppCompatActivity
 
             case GPS_ENABLE_REQUEST_CODE:
 
-                //사용자가 GPS 활성 시켰는지 검사
                 if (checkLocationServicesStatus()) {
                     if (checkLocationServicesStatus()) {
 

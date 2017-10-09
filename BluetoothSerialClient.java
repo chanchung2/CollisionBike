@@ -22,16 +22,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-//package kr.re.Dev.Bluetooth;
-
-/**
- * BluetoothSerialClient
- * 釉붾（?ъ뒪瑜??댁슜???쒕━???듭떊??媛꾪렪?섍쾶~ :)
- *
- * www.dev.re.kr
- * @author ice3x2@gmail.com / Sungbeom Hong.
- *
- */
 public class BluetoothSerialClient {
 
 
@@ -272,7 +262,11 @@ public class BluetoothSerialClient {
                     @Override
                     public void run() {
                         if(mBluetoothStreamingHandler != null) {
-                            mBluetoothStreamingHandler.onData(buffer ,readBytes);
+                            try {
+                                mBluetoothStreamingHandler.onData(buffer ,readBytes);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 });
@@ -362,7 +356,7 @@ public class BluetoothSerialClient {
         public abstract void onError(Exception e);
         public abstract void onConnected();
         public abstract void onDisconnected();
-        public abstract void onData(byte[] buffer, int length);
+        public abstract void onData(byte[] buffer, int length) throws IOException;
         public final boolean close() {
             BluetoothSerialClient btSet = getInstance();
             if(btSet != null)

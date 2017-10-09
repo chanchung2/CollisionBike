@@ -42,9 +42,12 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+
 
 
 public class MapActivity extends AppCompatActivity
@@ -76,6 +79,9 @@ public class MapActivity extends AppCompatActivity
 
     boolean Runstate = false;
 
+    String Latitude;
+    String Longitude;
+
     PolylineOptions rectOptions = new PolylineOptions();
 
     LocationRequest locationRequest = new LocationRequest()
@@ -85,6 +91,7 @@ public class MapActivity extends AppCompatActivity
 
     public MapActivity() {
     }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -246,6 +253,18 @@ public class MapActivity extends AppCompatActivity
 
         setCurrentLocation(location, markerTitle, markerSnippet);
 
+        BufferedWriter bw = null;
+        try {
+            bw = new BufferedWriter(new FileWriter(getFilesDir() + "GPS.txt" , false));
+
+            bw.write(String.valueOf(location.getLatitude()) + '\n');
+            bw.write(String.valueOf(location.getLongitude()));
+            bw.flush();
+            bw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         mCurrentLocatiion = location;
 
         if (Runstate == true) {
@@ -259,7 +278,6 @@ public class MapActivity extends AppCompatActivity
             speed = mCurrentLocatiion.getSpeed();
 
             SpeedDistance(speed);
-
         }
     }
 
@@ -615,5 +633,4 @@ public class MapActivity extends AppCompatActivity
 
         distanceview.setText("이동한 거리 : " + distance + "m");
     }
-
 }

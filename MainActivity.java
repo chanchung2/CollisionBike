@@ -214,10 +214,9 @@ public class MainActivity extends AppCompatActivity {
             String message ="";
             @Override
             public void onStart() {
-                Log.d("Test", "Scan Start.");
                 mLoadingDialog.show();
                 message = "검색 중...";
-                mLoadingDialog.setMessage("Scanning....");
+                mLoadingDialog.setMessage("검색중....");
                 mLoadingDialog.setCancelable(true);
                 mLoadingDialog.setCanceledOnTouchOutside(false);
                 mLoadingDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
@@ -238,7 +237,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                Log.d("Test", "Scan finish.");
                 message = "";
                 mLoadingDialog.cancel();
                 mLoadingDialog.setCancelable(false);
